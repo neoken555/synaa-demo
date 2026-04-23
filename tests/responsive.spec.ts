@@ -9,7 +9,7 @@ const VIEWPORTS = [
 for (const vp of VIEWPORTS) {
   test(`no horizontal scroll at ${vp.label}`, async ({ page }) => {
     await page.setViewportSize({ width: vp.width, height: vp.height });
-    await page.goto('/');
+    await page.goto('');
 
     const scrollWidth: number = await page.evaluate(() => document.documentElement.scrollWidth);
     const clientWidth: number = await page.evaluate(() => document.documentElement.clientWidth);
