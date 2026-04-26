@@ -1,390 +1,1151 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SYNAA — Autonomous Agent Fleet</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            synblue: '#2563EB',
-            syncyan: '#06B6D4',
-            synorange: '#F97316',
-          },
-          keyframes: {
-            pulse2: {
-              '0%, 100%': { opacity: '1', transform: 'scale(1)' },
-              '50%': { opacity: '0.4', transform: 'scale(0.92)' },
-            },
-            hbeat: {
-              '0%': { strokeDashoffset: '120' },
-              '100%': { strokeDashoffset: '0' },
-            },
-            fadein: {
-              '0%': { opacity: '0', transform: 'translateY(16px)' },
-              '100%': { opacity: '1', transform: 'translateY(0)' },
-            },
-          },
-          animation: {
-            pulse2: 'pulse2 2.4s ease-in-out infinite',
-            hbeat: 'hbeat 2s linear infinite',
-            fadein: 'fadein 0.7s ease forwards',
-          },
-        },
-      },
-    };
-  </script>
-  <style>
-    /* System dark mode */
-    @media (prefers-color-scheme: dark) { :root { color-scheme: dark; } }
-    html.dark { color-scheme: dark; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SynGroup Internal Portal — SYNAA Fleet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 
-    body { transition: background-color 0.3s, color 0.3s; }
+<style>
+/* === BRAND TOKENS (SynGroup Deep — internal ops) === */
+:root {
+  --bg-deep:    #143E2C;
+  --bg-mid:     #1A4332;
+  --bg-card:    #1E4A38;
+  --bg-surface: #1A4332;
+  --border:     rgba(42,112,80,0.22);
+  --border-lit: rgba(79,164,120,0.35);
+  --green:      #2A7050;
+  --green-lit:  #4FA478;
+  --green-dim:  rgba(42,112,80,0.15);
+  --blue:       #00A0DF;
+  --warn:       #E8A020;
+  --danger:     #E05050;
+  --text:       #FFFFFF;
+  --text-sub:   #B8BCC0;
+  --text-dim:   rgba(184,188,192,0.5);
+  --mono:       'JetBrains Mono', monospace;
 
-    /* ECG heartbeat path animation */
-    .hbeat-path {
-      stroke-dasharray: 120;
-      stroke-dashoffset: 120;
-      animation: hbeat 2s linear infinite;
-    }
+  --sp-xs: clamp(0.4rem, 0.8vw, 0.65rem);
+  --sp-sm: clamp(0.65rem, 1.2vw, 1rem);
+  --sp-md: clamp(1rem, 2vw, 1.75rem);
+  --sp-lg: clamp(1.5rem, 3vw, 3rem);
+  --sp-xl: clamp(2.5rem, 5vw, 5rem);
 
-    @keyframes hbeat {
-      0%   { stroke-dashoffset: 120; }
-      100% { stroke-dashoffset: 0; }
-    }
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
 
-    /* Card hover glow */
-    .agent-card:hover {
-      box-shadow: 0 0 0 2px #2563EB55, 0 8px 32px #2563EB22;
-    }
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
 
-    /* Tier badge animation */
-    .tier-dot {
-      animation: pulse2 2.4s ease-in-out infinite;
-    }
-    @keyframes pulse2 {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.35; transform: scale(0.88); }
-    }
+/* === RESET & BASE === */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    /* Section fade-in */
-    .section-fadein { animation: fadein 0.7s ease forwards; }
-    @keyframes fadein {
-      0%   { opacity: 0; transform: translateY(16px); }
-      100% { opacity: 1; transform: translateY(0); }
-    }
-  </style>
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Prompt', sans-serif;
+  background: var(--bg-deep);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.55;
+}
+a { color: inherit; text-decoration: none; }
+img { max-width: 100%; }
+
+/* === TYPOGRAPHY === */
+.eyebrow {
+  font-size: clamp(0.58rem, 0.82vw, 0.72rem);
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--green-lit);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.eyebrow::before {
+  content: '';
+  display: block;
+  width: clamp(1rem, 1.5vw, 1.5rem);
+  height: 2px;
+  background: var(--green-lit);
+  flex-shrink: 0;
+}
+
+h1, h2, h3 { line-height: 1.1; letter-spacing: -0.02em; }
+
+/* === LAYOUT === */
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 var(--sp-lg);
+}
+
+/* === NAVIGATION === */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  background: rgba(20,62,44,0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-inner {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-lg);
+  height: clamp(3rem, 5vh, 3.75rem);
+}
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-shrink: 0;
+}
+.nav-logo-mark {
+  width: clamp(1.75rem, 2.5vw, 2.1rem);
+  height: clamp(1.75rem, 2.5vw, 2.1rem);
+  background: var(--green);
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(0.75rem, 1vw, 0.9rem);
+  font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+}
+.nav-wordmark {
+  font-size: clamp(0.8rem, 1.1vw, 1rem);
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.04em;
+}
+.nav-wordmark span { color: var(--green-lit); }
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-md);
+  margin-left: auto;
+  list-style: none;
+}
+.nav-links a {
+  font-size: clamp(0.65rem, 0.88vw, 0.8rem);
+  font-weight: 500;
+  color: var(--text-sub);
+  letter-spacing: 0.06em;
+  transition: color 0.2s;
+  padding: 0.25rem 0;
+  position: relative;
+}
+.nav-links a:hover { color: var(--text); }
+.nav-links a.active { color: var(--green-lit); }
+.nav-links a.active::after {
+  content: '';
+  position: absolute;
+  bottom: calc(-1 * clamp(0.5rem, 1.25vh, 0.9rem));
+  left: 0; right: 0;
+  height: 2px;
+  background: var(--green-lit);
+}
+.nav-links .nav-cta {
+  background: var(--green);
+  color: #fff;
+  padding: 0.35rem 0.85rem;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: clamp(0.62rem, 0.82vw, 0.72rem);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: background 0.2s;
+}
+.nav-links .nav-cta:hover { background: var(--green-lit); }
+.nav-links .nav-cta::after { display: none; }
+@media (max-width: 768px) {
+  .nav-links { gap: var(--sp-sm); }
+  .nav-links li:not(:last-child):not(:nth-last-child(2)) { display: none; }
+}
+
+/* === HERO === */
+.hero {
+  position: relative;
+  overflow: hidden;
+  padding: var(--sp-xl) 0 var(--sp-xl);
+  background: var(--bg-deep);
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 15% 80%, rgba(42,112,80,0.22) 0%, transparent 55%),
+    radial-gradient(ellipse at 88% 10%, rgba(0,160,223,0.05) 0%, transparent 40%);
+  pointer-events: none;
+}
+/* Subtle grid pattern */
+.hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(42,112,80,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(42,112,80,0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+}
+
+.hero-inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--sp-xl);
+  align-items: center;
+}
+@media (max-width: 900px) {
+  .hero-inner { grid-template-columns: 1fr; }
+  .hero-live { display: none; }
+}
+
+.hero-content {
+  border-left: 4px solid var(--green);
+  padding-left: var(--sp-md);
+  max-width: 60ch;
+}
+.hero-overline {
+  font-size: clamp(0.58rem, 0.82vw, 0.72rem);
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--green-lit);
+  margin-bottom: clamp(0.5rem, 1vh, 0.85rem);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.hero-overline::before {
+  content: '';
+  width: clamp(1rem, 1.5vw, 1.5rem);
+  height: 2px;
+  background: var(--green-lit);
+}
+.hero-title {
+  font-size: clamp(2rem, 5.5vw, 4.5rem);
+  font-weight: 800;
+  color: var(--text);
+  margin: clamp(0.5rem, 0.8vh, 0.75rem) 0;
+}
+.hero-title .accent { color: var(--green-lit); }
+.hero-rule {
+  width: clamp(2.5rem, 4vw, 3.5rem);
+  height: 2px;
+  background: var(--green);
+  margin: clamp(0.75rem, 1.5vh, 1.25rem) 0;
+  position: relative;
+}
+.hero-rule::after {
+  content: '';
+  position: absolute;
+  right: calc(-1 * 5px);
+  top: 50%;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  transform: translateY(-50%);
+}
+.hero-sub {
+  font-size: clamp(0.85rem, 1.3vw, 1.1rem);
+  color: var(--text-sub);
+  max-width: 52ch;
+  line-height: 1.6;
+  margin-bottom: clamp(1.25rem, 2.5vh, 2rem);
+}
+
+/* Hero KPI row */
+.hero-kpis {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(1.25rem, 2.5vw, 2.5rem);
+}
+.hkpi-val {
+  font-size: clamp(1.85rem, 3.5vw, 3rem);
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.hkpi-val .sfx { color: var(--green-lit); font-size: 0.55em; }
+.hkpi-lbl {
+  font-size: clamp(0.58rem, 0.78vw, 0.68rem);
+  font-weight: 500;
+  color: var(--text-sub);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-top: 0.25rem;
+}
+
+/* Hero live panel (right col) */
+.hero-live {
+  background: var(--bg-mid);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: var(--sp-md);
+  width: clamp(220px, 24vw, 300px);
+  flex-shrink: 0;
+}
+.live-title {
+  font-size: clamp(0.6rem, 0.8vw, 0.7rem);
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--green-lit);
+  margin-bottom: var(--sp-sm);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.live-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green-lit);
+  animation: livePulse 2s ease-in-out infinite;
+}
+@keyframes livePulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+.live-ecg {
+  background: rgba(0,0,0,0.25);
+  border-radius: 6px;
+  padding: 0.5rem;
+  margin-bottom: var(--sp-sm);
+  overflow: hidden;
+}
+.hbeat-path {
+  stroke-dasharray: 200;
+  stroke-dashoffset: 200;
+  animation: hbeatDraw 2.5s linear infinite;
+}
+@keyframes hbeatDraw {
+  0%   { stroke-dashoffset: 200; }
+  100% { stroke-dashoffset: -200; }
+}
+.live-agent-rows { display: flex; flex-direction: column; gap: clamp(0.25rem, 0.5vh, 0.4rem); }
+.live-agent-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid rgba(42,112,80,0.12);
+}
+.live-agent-row:last-child { border-bottom: none; }
+.live-tag {
+  font-family: var(--mono);
+  font-size: clamp(0.55rem, 0.7vw, 0.62rem);
+  font-weight: 600;
+  color: var(--green-lit);
+  min-width: 2.5rem;
+}
+.live-status {
+  font-size: clamp(0.55rem, 0.7vw, 0.62rem);
+  color: var(--text-sub);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.live-ind {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.ind-ok     { background: var(--green-lit); }
+.ind-active { background: var(--blue); animation: livePulse 1.5s ease-in-out infinite; }
+.ind-idle   { background: rgba(184,188,192,0.3); }
+
+/* === SECTION CHROME === */
+section { padding: var(--sp-xl) 0; }
+section:nth-child(even) { background: rgba(26,67,50,0.25); }
+
+.section-head {
+  text-align: center;
+  margin-bottom: clamp(2rem, 4vh, 3.5rem);
+}
+.section-head h2 {
+  font-size: clamp(1.5rem, 3.5vw, 2.75rem);
+  font-weight: 800;
+  color: var(--text);
+  margin: clamp(0.4rem, 0.8vh, 0.65rem) 0;
+}
+.section-head p {
+  font-size: clamp(0.78rem, 1.1vw, 0.95rem);
+  color: var(--text-sub);
+  max-width: 55ch;
+  margin: 0 auto;
+}
+
+/* === PROGRAM OVERVIEW FEATURE CARD === */
+.po-card {
+  background: var(--bg-mid);
+  border: 1px solid var(--border-lit);
+  border-left: 4px solid var(--green);
+  border-radius: var(--r-lg);
+  padding: var(--sp-lg) var(--sp-lg);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--sp-lg);
+  align-items: center;
+  transition: border-color 0.25s, box-shadow 0.25s;
+  text-decoration: none;
+}
+.po-card:hover {
+  border-color: var(--green-lit);
+  box-shadow: 0 0 0 1px rgba(79,164,120,0.2), 0 12px 40px rgba(42,112,80,0.12);
+}
+@media (max-width: 700px) {
+  .po-card { grid-template-columns: 1fr; }
+  .po-card-arrow { display: none; }
+}
+.po-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: clamp(0.55rem, 0.72vw, 0.62rem);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--green-lit);
+  background: rgba(79,164,120,0.12);
+  border: 1px solid rgba(79,164,120,0.25);
+  border-radius: 3px;
+  padding: 0.25rem 0.5rem;
+  margin-bottom: var(--sp-sm);
+}
+.po-badge-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green-lit); animation: livePulse 2s ease-in-out infinite; }
+.po-title {
+  font-size: clamp(1.25rem, 2.5vw, 2rem);
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  margin-bottom: 0.3rem;
+}
+.po-sub {
+  font-size: clamp(0.75rem, 1vw, 0.9rem);
+  color: var(--text-sub);
+  line-height: 1.5;
+  max-width: 52ch;
+}
+.po-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(0.75rem, 1.5vw, 1.5rem);
+  margin-top: var(--sp-sm);
+}
+.po-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.po-meta-val {
+  font-size: clamp(1.1rem, 2vw, 1.6rem);
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.po-meta-val.warn { color: var(--warn); }
+.po-meta-lbl {
+  font-size: clamp(0.55rem, 0.7vw, 0.62rem);
+  font-weight: 500;
+  color: var(--text-dim);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.po-card-arrow {
+  width: clamp(2.5rem, 3.5vw, 3.25rem);
+  height: clamp(2.5rem, 3.5vw, 3.25rem);
+  border-radius: 50%;
+  border: 1px solid var(--border-lit);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.2s, border-color 0.2s;
+}
+.po-card:hover .po-card-arrow { background: var(--green); border-color: var(--green); }
+.po-card-arrow svg { color: var(--green-lit); transition: color 0.2s; }
+.po-card:hover .po-card-arrow svg { color: #fff; }
+
+/* === AGENT CARDS === */
+.agent-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+  gap: clamp(0.6rem, 1.2vw, 1rem);
+}
+.agent-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: var(--sp-md);
+  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.agent-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--green);
+  border-radius: 0 2px 2px 0;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.agent-card:hover {
+  border-color: var(--border-lit);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(42,112,80,0.1);
+}
+.agent-card:hover::before { opacity: 1; }
+
+.agent-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: var(--sp-sm);
+}
+.agent-badge {
+  width: clamp(2rem, 3vw, 2.5rem);
+  height: clamp(2rem, 3vw, 2.5rem);
+  border-radius: var(--r-sm);
+  background: var(--green);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: clamp(0.6rem, 0.85vw, 0.78rem);
+  flex-shrink: 0;
+  font-family: var(--mono);
+  letter-spacing: 0.04em;
+}
+.agent-role {
+  font-size: clamp(0.75rem, 0.95vw, 0.875rem);
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.25;
+}
+.agent-dept {
+  font-size: clamp(0.58rem, 0.72vw, 0.65rem);
+  font-weight: 500;
+  color: var(--green-lit);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-top: 0.15rem;
+}
+.agent-desc {
+  font-size: clamp(0.68rem, 0.88vw, 0.78rem);
+  color: var(--text-sub);
+  line-height: 1.55;
+}
+
+/* === ARCHITECTURE === */
+.arch-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-lg);
+  align-items: start;
+}
+@media (max-width: 800px) { .arch-grid { grid-template-columns: 1fr; } }
+
+.arch-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: var(--sp-md);
+}
+.arch-card-title {
+  font-size: clamp(0.6rem, 0.82vw, 0.72rem);
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--green-lit);
+  margin-bottom: var(--sp-sm);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.arch-card-title::before {
+  content: '';
+  width: 3px;
+  height: clamp(0.75rem, 1.2vw, 1rem);
+  background: var(--green);
+  border-radius: 1px;
+}
+
+/* memory tier dots */
+.tier-dot {
+  animation: tierPulse 2.4s ease-in-out infinite;
+}
+@keyframes tierPulse {
+  0%, 100% { opacity: 1; r: 5; }
+  50% { opacity: 0.35; r: 4; }
+}
+
+/* Gate pattern */
+.gate-steps { display: flex; flex-direction: column; gap: var(--sp-sm); }
+.gate-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+.gate-num {
+  width: clamp(1.75rem, 2.5vw, 2.1rem);
+  height: clamp(1.75rem, 2.5vw, 2.1rem);
+  border-radius: 5px;
+  background: var(--green);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(0.6rem, 0.82vw, 0.75rem);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.gate-label {
+  font-size: clamp(0.75rem, 0.95vw, 0.875rem);
+  font-weight: 700;
+  color: var(--text);
+}
+.gate-desc {
+  font-size: clamp(0.62rem, 0.82vw, 0.72rem);
+  color: var(--text-sub);
+  margin-top: 0.2rem;
+  line-height: 1.45;
+}
+.gate-connector {
+  margin-left: calc(clamp(1.75rem, 2.5vw, 2.1rem) / 2 - 1px);
+  width: 2px;
+  height: clamp(0.85rem, 1.5vh, 1.1rem);
+  background: linear-gradient(to bottom, var(--green), var(--border));
+  border-radius: 1px;
+}
+
+/* === TECH STACK === */
+.stack-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 180px), 1fr));
+  gap: clamp(0.6rem, 1.2vw, 1rem);
+}
+.stack-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: var(--sp-md);
+  text-align: center;
+  transition: border-color 0.2s, transform 0.2s;
+}
+.stack-card:hover { border-color: var(--border-lit); transform: translateY(-2px); }
+.stack-icon {
+  width: clamp(2.25rem, 3vw, 2.75rem);
+  height: clamp(2.25rem, 3vw, 2.75rem);
+  border-radius: var(--r-sm);
+  background: var(--green);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: clamp(0.72rem, 0.95vw, 0.9rem);
+  margin: 0 auto var(--sp-sm);
+  font-family: var(--mono);
+}
+.stack-name {
+  font-size: clamp(0.75rem, 0.95vw, 0.875rem);
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 0.3rem;
+}
+.stack-desc {
+  font-size: clamp(0.6rem, 0.78vw, 0.7rem);
+  color: var(--text-sub);
+  line-height: 1.5;
+}
+
+/* === FOOTER === */
+footer {
+  background: rgba(10,28,20,0.8);
+  border-top: 1px solid var(--border);
+  padding: var(--sp-lg) 0;
+}
+.footer-inner {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: var(--sp-lg);
+}
+@media (max-width: 600px) { .footer-inner { grid-template-columns: 1fr; } }
+.footer-brand {
+  font-size: clamp(0.78rem, 1vw, 0.9rem);
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 0.3rem;
+}
+.footer-brand span { color: var(--green-lit); }
+.footer-sub {
+  font-size: clamp(0.62rem, 0.82vw, 0.72rem);
+  color: var(--text-sub);
+}
+.footer-sub a { color: var(--green-lit); }
+.footer-copy {
+  font-size: clamp(0.58rem, 0.75vw, 0.65rem);
+  color: var(--text-dim);
+  text-align: right;
+}
+@media (max-width: 600px) { .footer-copy { text-align: left; } }
+
+/* === REVEAL ANIMATION === */
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.65s var(--ease-out), transform 0.65s var(--ease-out);
+}
+.revealed { opacity: 1; transform: translateY(0); }
+.reveal[data-d="1"] { transition-delay: 0.1s; }
+.reveal[data-d="2"] { transition-delay: 0.2s; }
+.reveal[data-d="3"] { transition-delay: 0.3s; }
+.reveal[data-d="4"] { transition-delay: 0.4s; }
+.reveal[data-d="5"] { transition-delay: 0.5s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; transition: none; }
+  *, *::before, *::after { animation-duration: 0.01ms !important; }
+}
+
+/* === DIVIDER === */
+.rule {
+  width: clamp(2.5rem, 4vw, 3.5rem);
+  height: 2px;
+  background: var(--green);
+  margin: clamp(0.6rem, 1.2vh, 1rem) 0;
+  position: relative;
+}
+.rule::after {
+  content: '';
+  position: absolute;
+  right: calc(-1 * 5px);
+  top: 50%;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  transform: translateY(-50%);
+}
+</style>
 </head>
-<body class="bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 font-sans antialiased">
+<body>
 
-<!-- ─── Dark Mode Toggle ─────────────────────────────────────────────────── -->
-<div class="fixed top-4 right-4 z-50">
-  <button id="themeToggle" aria-label="Toggle dark mode"
-    class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center transition-colors shadow">
-    <svg id="iconSun" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 hidden dark:block text-yellow-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1M4.22 4.22l.71.71m12.73 12.73.71.71M3 12H4m16 0h1M4.22 19.78l.71-.71m12.73-12.73.71-.71M12 7a5 5 0 100 10A5 5 0 0012 7z"/></svg>
-    <svg id="iconMoon" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 block dark:hidden text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 118.646 3.646 7 7 0 0020.354 15.354z"/></svg>
-  </button>
-</div>
+<!-- === NAVIGATION === -->
+<nav class="nav">
+  <div class="container">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">
+        <div class="nav-logo-mark">S</div>
+        <div class="nav-wordmark">Syn<span>Group</span> Internal</div>
+      </a>
+      <ul class="nav-links">
+        <li><a href="#fleet" class="active">Fleet</a></li>
+        <li><a href="#architecture">Architecture</a></li>
+        <li><a href="#stack">Tech Stack</a></li>
+        <li><a href="program-overview/" class="nav-cta">Program Overview</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
 
-<!-- ─── Hero ─────────────────────────────────────────────────────────────── -->
-<section class="relative overflow-hidden bg-gradient-to-br from-gray-950 via-blue-950 to-gray-950 text-white py-24 px-6 text-center">
-  <!-- Background grid -->
-  <div class="absolute inset-0 opacity-10 pointer-events-none" style="background-image: linear-gradient(#2563EB 1px, transparent 1px), linear-gradient(90deg, #2563EB 1px, transparent 1px); background-size: 40px 40px;"></div>
+<!-- === HERO === -->
+<header class="hero">
+  <div class="container">
+    <div class="hero-inner">
+      <div class="hero-content reveal">
+        <div class="hero-overline">SynGroup · Internal Portal · SYNAA Fleet</div>
+        <h1 class="hero-title">The Fleet That<br><span class="accent">Runs Itself</span></h1>
+        <div class="rule"></div>
+        <p class="hero-sub">12 autonomous AI agents — each with a role, memory, and budget — collaborating to operate SynGroup end-to-end. From BD to Support, every function is live.</p>
+        <div class="hero-kpis">
+          <div>
+            <div class="hkpi-val">12<span class="sfx"> agents</span></div>
+            <div class="hkpi-lbl">Active Fleet</div>
+          </div>
+          <div>
+            <div class="hkpi-val">5<span class="sfx"> tiers</span></div>
+            <div class="hkpi-lbl">Memory Layers</div>
+          </div>
+          <div>
+            <div class="hkpi-val">24<span class="sfx">/7</span></div>
+            <div class="hkpi-lbl">Heartbeat</div>
+          </div>
+          <div>
+            <div class="hkpi-val">2<span class="sfx">-gate</span></div>
+            <div class="hkpi-lbl">Review Pattern</div>
+          </div>
+        </div>
+      </div>
 
-  <div class="relative z-10 max-w-4xl mx-auto section-fadein">
-    <!-- Logo mark -->
-    <div class="inline-flex items-center gap-3 mb-6">
-      <span class="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center text-2xl font-black shadow-lg">S</span>
-      <span class="text-3xl font-black tracking-tight">SYNAA</span>
+      <!-- Live status panel -->
+      <div class="hero-live reveal" data-d="2">
+        <div class="live-title">
+          <div class="live-dot"></div>
+          Fleet Live
+        </div>
+        <div class="live-ecg">
+          <svg viewBox="0 0 260 50" width="100%" xmlns="http://www.w3.org/2000/svg">
+            <rect width="260" height="50" rx="4" fill="#0a1e15"/>
+            <line x1="0" y1="25" x2="260" y2="25" stroke="rgba(42,112,80,0.25)" stroke-width="1"/>
+            <polyline class="hbeat-path"
+              points="0,25 20,25 35,25 42,8 50,42 58,25 80,25 105,25 120,25 127,8 135,42 143,25 165,25 190,25 205,25 212,8 220,42 228,25 260,25"
+              fill="none" stroke="#4FA478" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="live-agent-rows">
+          <div class="live-agent-row">
+            <div class="live-tag">CTO</div>
+            <div class="live-status">Executing SYNAA-115</div>
+            <div class="live-ind ind-active"></div>
+          </div>
+          <div class="live-agent-row">
+            <div class="live-tag">PM</div>
+            <div class="live-status">Snapshot routine</div>
+            <div class="live-ind ind-ok"></div>
+          </div>
+          <div class="live-agent-row">
+            <div class="live-tag">CEO</div>
+            <div class="live-status">Reviewing approvals</div>
+            <div class="live-ind ind-ok"></div>
+          </div>
+          <div class="live-agent-row">
+            <div class="live-tag">BD</div>
+            <div class="live-status">Pipeline triage</div>
+            <div class="live-ind ind-ok"></div>
+          </div>
+          <div class="live-agent-row">
+            <div class="live-tag">QA</div>
+            <div class="live-status">Idle</div>
+            <div class="live-ind ind-idle"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- === PROGRAM OVERVIEW SECTION === -->
+<section id="reports">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="eyebrow">Daily Intelligence · PM Reports</div>
+      <h2>Program Overview</h2>
+      <p>Live fleet status from the daily PM snapshot — 25 projects tracked across the masterplan workspace.</p>
     </div>
 
-    <h1 class="text-5xl sm:text-6xl font-extrabold tracking-tight mb-4 leading-tight">
-      The Fleet That<br/><span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">Runs Itself</span>
-    </h1>
-    <p class="text-xl text-blue-200 max-w-2xl mx-auto mb-10">
-      12 autonomous AI agents — each with a role, memory, and budget — collaborating to operate SynGroup end-to-end. From BD to Support, every function is live.
-    </p>
+    <a href="program-overview/" class="po-card reveal">
+      <div>
+        <div class="po-badge">
+          <div class="po-badge-dot"></div>
+          Updated 2026-04-26
+        </div>
+        <div class="po-title">Program Overview · Daily Snapshot</div>
+        <div class="po-sub">Fleet health, per-project status matrix, health pipeline, engagement map, and PM commentary — all from the 2026-04-26 Plane snapshot.</div>
+        <div class="po-meta">
+          <div class="po-meta-item">
+            <div class="po-meta-val">25</div>
+            <div class="po-meta-lbl">Projects tracked</div>
+          </div>
+          <div class="po-meta-item">
+            <div class="po-meta-val warn">75</div>
+            <div class="po-meta-lbl">WIP items</div>
+          </div>
+          <div class="po-meta-item">
+            <div class="po-meta-val warn">30</div>
+            <div class="po-meta-lbl">Overdue</div>
+          </div>
+          <div class="po-meta-item">
+            <div class="po-meta-val">8</div>
+            <div class="po-meta-lbl">Healthy projects</div>
+          </div>
+          <div class="po-meta-item">
+            <div class="po-meta-val warn">7</div>
+            <div class="po-meta-lbl">Overloaded eng.</div>
+          </div>
+        </div>
+      </div>
+      <div class="po-card-arrow">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+        </svg>
+      </div>
+    </a>
+  </div>
+</section>
 
-    <!-- Stats row -->
-    <div class="flex flex-wrap justify-center gap-8 text-center">
-      <div><div class="text-4xl font-black text-cyan-400">12</div><div class="text-sm text-blue-200 mt-1">Active Agents</div></div>
-      <div><div class="text-4xl font-black text-cyan-400">5</div><div class="text-sm text-blue-200 mt-1">Memory Tiers</div></div>
-      <div><div class="text-4xl font-black text-cyan-400">24/7</div><div class="text-sm text-blue-200 mt-1">Heartbeat Cadence</div></div>
-      <div><div class="text-4xl font-black text-cyan-400">2-phase</div><div class="text-sm text-blue-200 mt-1">Gate Pattern</div></div>
+<!-- === AGENT FLEET === -->
+<section id="fleet">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="eyebrow">The Fleet · 12 Agents</div>
+      <h2>Autonomous Agent Fleet</h2>
+      <p>Each agent owns a domain, maintains memory, and operates autonomously within its mandate.</p>
+    </div>
+
+    <div class="agent-grid">
+
+      <div class="agent-card reveal" data-d="1">
+        <div class="agent-head">
+          <div class="agent-badge">CEO</div>
+          <div>
+            <div class="agent-role">Chief Executive Officer</div>
+            <div class="agent-dept">Executive</div>
+          </div>
+        </div>
+        <p class="agent-desc">Company strategy, OKRs, and resource allocation across all service lines. Hiring and agent lifecycle: create, configure, retire agents. Board-level approvals: vendor spend, strategic partnerships, launch decisions.</p>
+      </div>
+
+      <div class="agent-card reveal" data-d="2">
+        <div class="agent-head">
+          <div class="agent-badge">CTO</div>
+          <div>
+            <div class="agent-role">Chief Technology Officer</div>
+            <div class="agent-dept">Engineering</div>
+          </div>
+        </div>
+        <p class="agent-desc">Technical roadmap and architecture decisions across all product and SI engagements. Engineering team lead. Code review, security sign-off, DevOps and infrastructure direction. Technical risk register.</p>
+      </div>
+
+      <div class="agent-card reveal" data-d="3">
+        <div class="agent-head">
+          <div class="agent-badge">CFO</div>
+          <div>
+            <div class="agent-role">Chief Financial Officer</div>
+            <div class="agent-dept">Finance</div>
+          </div>
+        </div>
+        <p class="agent-desc">Client billing across all service lines. Margin tracking per engagement — flag risk before it becomes a loss. Electronic parts trading P&amp;L. Monthly board reporting. ESG cost accounting on large bids.</p>
+      </div>
+
+      <div class="agent-card reveal" data-d="4">
+        <div class="agent-head">
+          <div class="agent-badge">BD</div>
+          <div>
+            <div class="agent-role">Business Development</div>
+            <div class="agent-dept">Revenue</div>
+          </div>
+        </div>
+        <p class="agent-desc">Revenue pipeline across all service lines. RFQ qualification: fit, margin, capacity. Proposal quality. Win/loss tracking and competitive intelligence. Partnership development. Clean handoff to PM at deal close.</p>
+      </div>
+
+      <div class="agent-card reveal" data-d="5">
+        <div class="agent-head">
+          <div class="agent-badge">PM</div>
+          <div>
+            <div class="agent-role">Project Manager</div>
+            <div class="agent-dept">Delivery</div>
+          </div>
+        </div>
+        <p class="agent-desc">Delivery across all active engagements — NPI schedules, SI deployments, MA service contracts. Milestones, progress tracking, change orders, retros. Stakeholder visibility for CEO, BD, and clients.</p>
+      </div>
+
+      <div class="agent-card reveal" data-d="1">
+        <div class="agent-head">
+          <div class="agent-badge">RES</div>
+          <div>
+            <div class="agent-role">Market &amp; Tech Researcher</div>
+            <div class="agent-dept">Intelligence</div>
+          </div>
+        </div>
+        <p class="agent-desc">Technology scouting in IoT, AI, smart-manufacturing, and cybersecurity. Market sizing and competitive analysis for Thai and ASEAN engineering services. Quarterly trend synthesis delivered to CEO, BD, and CTO.</p>
+      </div>
+
+      <div class="agent-card reveal" data-d="2">
+        <div class="agent-head">
+          <div class="agent-badge">HW</div>
+          <div>
+            <div class="agent-role">HW-FW Engineer</div>
+            <div class="agent-dept">Hardware</div>
+          </div>
+        </div>
+        <p class="agent-desc">Schematic capture, PCB layout, component selection, embedded firmware architecture. DFX compliance on every design. Design handoff to NPI-Mfg with complete manufacturing package. IoT devices, industrial controllers, smart sensors.</p>
+      </div>
+
+      <div class="agent-card reveal" data-d="3">
+        <div class="agent-head">
+          <div class="agent-badge">SW</div>
+          <div>
+            <div class="agent-role">SW-App Engineer</div>
+            <div class="agent-dept">Software</div>
+          </div>
+        </div>
+        <p class="agent-desc">Cloud backend (NestJS, Prisma, AWS/EMQX), IoT data pipelines, mobile apps, web dashboards. API design and versioning — stable contracts before implementing dependents. Secure, testable, maintainable code that passes QA before delivery.</p>
+      </div>
+
+      <div class="agent-card reveal" data-d="4">
+        <div class="agent-head">
+          <div class="agent-badge">QA</div>
+          <div>
+            <div class="agent-role">QA / Test Engineer</div>
+            <div class="agent-dept">Quality</div>
+          </div>
+        </div>
+        <p class="agent-desc">Quality gate on all SynGroup deliverables — nothing ships without QA sign-off. Test plan design for firmware, software, and hardware. NPI First Article Inspection. AQL audits. Certification pre-compliance checks (NBTC, FCC, CE).</p>
+      </div>
+
+      <div class="agent-card reveal" data-d="5">
+        <div class="agent-head">
+          <div class="agent-badge">NPI</div>
+          <div>
+            <div class="agent-role">NPI &amp; Mfg Engineering</div>
+            <div class="agent-dept">Manufacturing</div>
+          </div>
+        </div>
+        <p class="agent-desc">New product introduction from design to production-ready state. Test fixture design. Value engineering for cost reduction. Line qualification to hit yield targets. Factory handoff documentation. Production ramp and yield tracking.</p>
+      </div>
+
+      <div class="agent-card reveal" data-d="1">
+        <div class="agent-head">
+          <div class="agent-badge">PRC</div>
+          <div>
+            <div class="agent-role">Sourcing / Procurement</div>
+            <div class="agent-dept">Supply Chain</div>
+          </div>
+        </div>
+        <p class="agent-desc">Electronic parts trading and BOM sourcing. Vendor qualification: technical capability, reliability, RoHS/REACH compliance. Supply chain risk assessment. MOQ and pricing negotiation. Accurate BOM costs to BD for proposal pricing.</p>
+      </div>
+
+      <div class="agent-card reveal" data-d="2">
+        <div class="agent-head">
+          <div class="agent-badge">SUP</div>
+          <div>
+            <div class="agent-role">MA / After-Sales Support</div>
+            <div class="agent-dept">Support</div>
+          </div>
+        </div>
+        <p class="agent-desc">First line of response for all deployed SynGroup products and SI systems. Warranty management. Issue triage: HW, FW, or SW root cause before escalating. Firmware and software patch delivery. SLA compliance and customer satisfaction tracking.</p>
+      </div>
+
     </div>
   </div>
 </section>
 
-<!-- ─── Agent Cards ───────────────────────────────────────────────────────── -->
-<section class="max-w-7xl mx-auto px-6 py-20">
-  <h2 class="text-3xl font-bold mb-2 text-center">The Fleet</h2>
-  <p class="text-center text-gray-500 dark:text-gray-400 mb-12">Each agent owns a domain, maintains memory, and operates autonomously within its mandate.</p>
-
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-
-    <!-- CEO -->
-    <div class="agent-card rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 transition-shadow">
-      <div class="flex items-start gap-3 mb-3">
-        <span class="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center font-bold shrink-0 text-sm">CEO</span>
-        <div>
-          <div class="font-semibold text-sm">Chief Executive Officer</div>
-          <div class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Executive</div>
-        </div>
-      </div>
-      <p class="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">Company strategy, OKRs, and resource allocation across all service lines. Hiring and agent lifecycle: create, configure, retire agents. Board-level approvals: vendor spend, strategic partnerships, launch decisions.</p>
+<!-- === ARCHITECTURE === -->
+<section id="architecture">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="eyebrow">System Design</div>
+      <h2>Architecture</h2>
+      <p>T0–T4 tiered memory, heartbeat execution loop, two-phase gate pattern.</p>
     </div>
 
-    <!-- CTO -->
-    <div class="agent-card rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 transition-shadow">
-      <div class="flex items-start gap-3 mb-3">
-        <span class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold shrink-0 text-sm">CTO</span>
-        <div>
-          <div class="font-semibold text-sm">Chief Technology Officer</div>
-          <div class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Engineering</div>
-        </div>
-      </div>
-      <p class="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">Technical roadmap and architecture decisions across all product and SI engagements. Engineering team lead. Code review, security sign-off, DevOps and infrastructure direction. Technical risk register.</p>
-    </div>
-
-    <!-- CFO -->
-    <div class="agent-card rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 transition-shadow">
-      <div class="flex items-start gap-3 mb-3">
-        <span class="w-10 h-10 rounded-xl bg-emerald-700 text-white flex items-center justify-center font-bold shrink-0 text-sm">CFO</span>
-        <div>
-          <div class="font-semibold text-sm">Chief Financial Officer</div>
-          <div class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Finance</div>
-        </div>
-      </div>
-      <p class="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">Client billing across all service lines. Margin tracking per engagement — flag risk before it becomes a loss. Electronic parts trading P&L. Monthly board reporting. ESG cost accounting on large bids.</p>
-    </div>
-
-    <!-- BD -->
-    <div class="agent-card rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 transition-shadow">
-      <div class="flex items-start gap-3 mb-3">
-        <span class="w-10 h-10 rounded-xl bg-orange-700 text-white flex items-center justify-center font-bold shrink-0 text-sm">BD</span>
-        <div>
-          <div class="font-semibold text-sm">Business Development</div>
-          <div class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Revenue</div>
-        </div>
-      </div>
-      <p class="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">Revenue pipeline across all service lines. RFQ qualification: fit, margin, capacity. Proposal quality. Win/loss tracking and competitive intelligence. Partnership development. Clean handoff to PM at deal close.</p>
-    </div>
-
-    <!-- PM -->
-    <div class="agent-card rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 transition-shadow">
-      <div class="flex items-start gap-3 mb-3">
-        <span class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold shrink-0 text-sm">PM</span>
-        <div>
-          <div class="font-semibold text-sm">Project Manager</div>
-          <div class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Delivery</div>
-        </div>
-      </div>
-      <p class="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">Delivery across all active engagements — NPI schedules, SI deployments, MA service contracts. Milestones, progress tracking, change orders, retros. Stakeholder visibility for CEO, BD, and clients.</p>
-    </div>
-
-    <!-- Researcher -->
-    <div class="agent-card rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 transition-shadow">
-      <div class="flex items-start gap-3 mb-3">
-        <span class="w-10 h-10 rounded-xl bg-teal-700 text-white flex items-center justify-center font-bold shrink-0 text-sm">RES</span>
-        <div>
-          <div class="font-semibold text-sm">Market &amp; Tech Researcher</div>
-          <div class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Intelligence</div>
-        </div>
-      </div>
-      <p class="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">Technology scouting in IoT, AI, smart-manufacturing, and cybersecurity. Market sizing and competitive analysis for Thai and ASEAN engineering services. Quarterly trend synthesis delivered to CEO, BD, and CTO.</p>
-    </div>
-
-    <!-- HW-FW -->
-    <div class="agent-card rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 transition-shadow">
-      <div class="flex items-start gap-3 mb-3">
-        <span class="w-10 h-10 rounded-xl bg-yellow-700 text-white flex items-center justify-center font-bold shrink-0 text-sm">HW</span>
-        <div>
-          <div class="font-semibold text-sm">HW-FW Engineer</div>
-          <div class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Hardware</div>
-        </div>
-      </div>
-      <p class="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">Schematic capture, PCB layout, component selection, embedded firmware architecture. DFX compliance on every design. Design handoff to NPI-Mfg with complete manufacturing package. IoT devices, industrial controllers, smart sensors.</p>
-    </div>
-
-    <!-- SW-App -->
-    <div class="agent-card rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 transition-shadow">
-      <div class="flex items-start gap-3 mb-3">
-        <span class="w-10 h-10 rounded-xl bg-sky-700 text-white flex items-center justify-center font-bold shrink-0 text-sm">SW</span>
-        <div>
-          <div class="font-semibold text-sm">SW-App Engineer</div>
-          <div class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Software</div>
-        </div>
-      </div>
-      <p class="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">Cloud backend (NestJS, Prisma, AWS/EMQX), IoT data pipelines, mobile apps, web dashboards. API design and versioning — stable contracts before implementing dependents. Secure, testable, maintainable code that passes QA before delivery.</p>
-    </div>
-
-    <!-- QA -->
-    <div class="agent-card rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 transition-shadow">
-      <div class="flex items-start gap-3 mb-3">
-        <span class="w-10 h-10 rounded-xl bg-red-700 text-white flex items-center justify-center font-bold shrink-0 text-sm">QA</span>
-        <div>
-          <div class="font-semibold text-sm">QA / Test Engineer</div>
-          <div class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Quality</div>
-        </div>
-      </div>
-      <p class="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">Quality gate on all SynGroup deliverables — nothing ships without QA sign-off. Test plan design for firmware, software, and hardware. NPI First Article Inspection. AQL audits. Certification pre-compliance checks (NBTC, FCC, CE).</p>
-    </div>
-
-    <!-- NPI-Mfg -->
-    <div class="agent-card rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 transition-shadow">
-      <div class="flex items-start gap-3 mb-3">
-        <span class="w-10 h-10 rounded-xl bg-amber-700 text-white flex items-center justify-center font-bold shrink-0 text-sm">NPI</span>
-        <div>
-          <div class="font-semibold text-sm">NPI &amp; Mfg Engineering</div>
-          <div class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Manufacturing</div>
-        </div>
-      </div>
-      <p class="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">New product introduction from design to production-ready state. Test fixture design. Value engineering for cost reduction. Line qualification to hit yield targets. Factory handoff documentation. Production ramp and yield tracking.</p>
-    </div>
-
-    <!-- Procurement -->
-    <div class="agent-card rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 transition-shadow">
-      <div class="flex items-start gap-3 mb-3">
-        <span class="w-10 h-10 rounded-xl bg-lime-700 text-white flex items-center justify-center font-bold shrink-0 text-sm">PRC</span>
-        <div>
-          <div class="font-semibold text-sm">Sourcing / Procurement</div>
-          <div class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Supply Chain</div>
-        </div>
-      </div>
-      <p class="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">Electronic parts trading and BOM sourcing. Vendor qualification: technical capability, reliability, RoHS/REACH compliance. Supply chain risk assessment. MOQ and pricing negotiation. Accurate BOM costs to BD for proposal pricing.</p>
-    </div>
-
-    <!-- Support -->
-    <div class="agent-card rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 transition-shadow">
-      <div class="flex items-start gap-3 mb-3">
-        <span class="w-10 h-10 rounded-xl bg-pink-700 text-white flex items-center justify-center font-bold shrink-0 text-sm">SUP</span>
-        <div>
-          <div class="font-semibold text-sm">MA / After-Sales Support</div>
-          <div class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Support</div>
-        </div>
-      </div>
-      <p class="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">First line of response for all deployed SynGroup products and SI systems. Warranty management. Issue triage: HW, FW, or SW root cause before escalating. Firmware and software patch delivery. SLA compliance and customer satisfaction tracking.</p>
-    </div>
-
-  </div>
-</section>
-
-<!-- ─── Architecture ───────────────────────────────────────────────────────── -->
-<section class="bg-gray-50 dark:bg-gray-900 py-20 px-6">
-  <div class="max-w-5xl mx-auto">
-    <h2 class="text-3xl font-bold mb-2 text-center">Architecture</h2>
-    <p class="text-center text-gray-500 dark:text-gray-400 mb-12">T0–T4 tiered memory, heartbeat execution, two-phase gate pattern.</p>
-
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+    <div class="arch-grid">
 
       <!-- Memory Tier Diagram -->
-      <div class="bg-white dark:bg-gray-950 rounded-2xl border border-gray-200 dark:border-gray-800 p-6">
-        <h3 class="font-semibold mb-4 text-sm uppercase tracking-widest text-gray-500">Tiered Memory System</h3>
-        <svg viewBox="0 0 320 260" class="w-full" xmlns="http://www.w3.org/2000/svg" aria-label="T0-T4 memory tiers diagram">
+      <div class="arch-card reveal">
+        <div class="arch-card-title">Tiered Memory System</div>
+        <svg viewBox="0 0 320 265" width="100%" xmlns="http://www.w3.org/2000/svg" aria-label="T0–T4 memory tiers">
           <!-- T0 -->
-          <rect x="10" y="10" width="300" height="38" rx="8" fill="#1d4ed8" opacity="0.18"/>
-          <rect x="10" y="10" width="300" height="38" rx="8" fill="none" stroke="#2563EB" stroke-width="1.5"/>
-          <circle cx="30" cy="29" r="5" fill="#06B6D4" class="tier-dot"/>
-          <text x="44" y="24" font-size="11" fill="#2563EB" font-weight="700" font-family="monospace">T0</text>
-          <text x="64" y="24" font-size="11" fill="currentColor" font-family="sans-serif">Working Memory</text>
-          <text x="44" y="40" font-size="9.5" fill="#6b7280" font-family="sans-serif">In-context conversation window — ephemeral per heartbeat</text>
+          <rect x="8" y="8" width="304" height="40" rx="7" fill="rgba(42,112,80,0.12)"/>
+          <rect x="8" y="8" width="304" height="40" rx="7" fill="none" stroke="#2A7050" stroke-width="1.5"/>
+          <circle cx="28" cy="28" r="5" fill="#4FA478" class="tier-dot"/>
+          <text x="42" y="23" font-size="11" fill="#4FA478" font-weight="700" font-family="JetBrains Mono, monospace">T0</text>
+          <text x="64" y="23" font-size="11" fill="#FFFFFF" font-family="Prompt, sans-serif">Working Memory</text>
+          <text x="42" y="39" font-size="9" fill="#B8BCC0" font-family="Prompt, sans-serif">In-context window — ephemeral per heartbeat</text>
 
           <!-- T1 -->
-          <rect x="10" y="58" width="300" height="38" rx="8" fill="#0e7490" opacity="0.12"/>
-          <rect x="10" y="58" width="300" height="38" rx="8" fill="none" stroke="#06B6D4" stroke-width="1.5"/>
-          <circle cx="30" cy="77" r="5" fill="#06B6D4" class="tier-dot" style="animation-delay:0.4s"/>
-          <text x="44" y="72" font-size="11" fill="#06B6D4" font-weight="700" font-family="monospace">T1</text>
-          <text x="64" y="72" font-size="11" fill="currentColor" font-family="sans-serif">Hot Cache</text>
-          <text x="44" y="88" font-size="9.5" fill="#6b7280" font-family="sans-serif">CLAUDE.md / @-includes — auto-loaded every session</text>
+          <rect x="8" y="58" width="304" height="40" rx="7" fill="rgba(0,160,223,0.08)"/>
+          <rect x="8" y="58" width="304" height="40" rx="7" fill="none" stroke="#00A0DF" stroke-width="1.5"/>
+          <circle cx="28" cy="78" r="5" fill="#00A0DF" class="tier-dot" style="animation-delay:0.5s"/>
+          <text x="42" y="73" font-size="11" fill="#00A0DF" font-weight="700" font-family="JetBrains Mono, monospace">T1</text>
+          <text x="64" y="73" font-size="11" fill="#FFFFFF" font-family="Prompt, sans-serif">Hot Cache</text>
+          <text x="42" y="89" font-size="9" fill="#B8BCC0" font-family="Prompt, sans-serif">CLAUDE.md / @-includes — auto-loaded every session</text>
 
           <!-- T2 -->
-          <rect x="10" y="106" width="300" height="38" rx="8" fill="#065f46" opacity="0.12"/>
-          <rect x="10" y="106" width="300" height="38" rx="8" fill="none" stroke="#10b981" stroke-width="1.5"/>
-          <circle cx="30" cy="125" r="5" fill="#10b981" class="tier-dot" style="animation-delay:0.8s"/>
-          <text x="44" y="120" font-size="11" fill="#10b981" font-weight="700" font-family="monospace">T2</text>
-          <text x="64" y="120" font-size="11" fill="currentColor" font-family="sans-serif">Structured Memory Files</text>
-          <text x="44" y="136" font-size="9.5" fill="#6b7280" font-family="sans-serif">~/.claude/projects/*/memory/ — persists across sessions</text>
+          <rect x="8" y="108" width="304" height="40" rx="7" fill="rgba(79,164,120,0.1)"/>
+          <rect x="8" y="108" width="304" height="40" rx="7" fill="none" stroke="#4FA478" stroke-width="1.5"/>
+          <circle cx="28" cy="128" r="5" fill="#4FA478" class="tier-dot" style="animation-delay:1s"/>
+          <text x="42" y="123" font-size="11" fill="#4FA478" font-weight="700" font-family="JetBrains Mono, monospace">T2</text>
+          <text x="64" y="123" font-size="11" fill="#FFFFFF" font-family="Prompt, sans-serif">Structured Memory Files</text>
+          <text x="42" y="139" font-size="9" fill="#B8BCC0" font-family="Prompt, sans-serif">~/.claude/projects/*/memory/ — persists across sessions</text>
 
           <!-- T3 -->
-          <rect x="10" y="154" width="300" height="38" rx="8" fill="#4c1d95" opacity="0.12"/>
-          <rect x="10" y="154" width="300" height="38" rx="8" fill="none" stroke="#8b5cf6" stroke-width="1.5"/>
-          <circle cx="30" cy="173" r="5" fill="#8b5cf6" class="tier-dot" style="animation-delay:1.2s"/>
-          <text x="44" y="168" font-size="11" fill="#8b5cf6" font-weight="700" font-family="monospace">T3</text>
-          <text x="64" y="168" font-size="11" fill="currentColor" font-family="sans-serif">NotebookLM Knowledge Base</text>
-          <text x="44" y="184" font-size="9.5" fill="#6b7280" font-family="sans-serif">Semantic search over ingested docs — queried on demand</text>
+          <rect x="8" y="158" width="304" height="40" rx="7" fill="rgba(42,112,80,0.08)"/>
+          <rect x="8" y="158" width="304" height="40" rx="7" fill="none" stroke="rgba(79,164,120,0.5)" stroke-width="1.5"/>
+          <circle cx="28" cy="178" r="5" fill="rgba(79,164,120,0.6)" class="tier-dot" style="animation-delay:1.5s"/>
+          <text x="42" y="173" font-size="11" fill="rgba(79,164,120,0.8)" font-weight="700" font-family="JetBrains Mono, monospace">T3</text>
+          <text x="64" y="173" font-size="11" fill="#FFFFFF" font-family="Prompt, sans-serif">NotebookLM Knowledge Base</text>
+          <text x="42" y="189" font-size="9" fill="#B8BCC0" font-family="Prompt, sans-serif">Semantic search over ingested docs — queried on demand</text>
 
           <!-- T4 -->
-          <rect x="10" y="202" width="300" height="38" rx="8" fill="#78350f" opacity="0.12"/>
-          <rect x="10" y="202" width="300" height="38" rx="8" fill="none" stroke="#f97316" stroke-width="1.5"/>
-          <circle cx="30" cy="221" r="5" fill="#f97316" class="tier-dot" style="animation-delay:1.6s"/>
-          <text x="44" y="216" font-size="11" fill="#f97316" font-weight="700" font-family="monospace">T4</text>
-          <text x="64" y="216" font-size="11" fill="currentColor" font-family="sans-serif">External / Cloud State</text>
-          <text x="44" y="232" font-size="9.5" fill="#6b7280" font-family="sans-serif">GitHub, Supabase, Cloudflare — source of truth</text>
+          <rect x="8" y="208" width="304" height="40" rx="7" fill="rgba(42,112,80,0.06)"/>
+          <rect x="8" y="208" width="304" height="40" rx="7" fill="none" stroke="rgba(79,164,120,0.3)" stroke-width="1.5"/>
+          <circle cx="28" cy="228" r="5" fill="rgba(79,164,120,0.4)" class="tier-dot" style="animation-delay:2s"/>
+          <text x="42" y="223" font-size="11" fill="rgba(79,164,120,0.6)" font-weight="700" font-family="JetBrains Mono, monospace">T4</text>
+          <text x="64" y="223" font-size="11" fill="#FFFFFF" font-family="Prompt, sans-serif">External / Cloud State</text>
+          <text x="42" y="239" font-size="9" fill="#B8BCC0" font-family="Prompt, sans-serif">GitHub, Supabase, Cloudflare — source of truth</text>
         </svg>
       </div>
 
-      <!-- Right column: Heartbeat + Gate -->
-      <div class="flex flex-col gap-6">
+      <!-- Right column -->
+      <div style="display:flex; flex-direction:column; gap:var(--sp-md);">
 
-        <!-- Heartbeat Animation -->
-        <div class="bg-white dark:bg-gray-950 rounded-2xl border border-gray-200 dark:border-gray-800 p-6">
-          <h3 class="font-semibold mb-4 text-sm uppercase tracking-widest text-gray-500">Heartbeat Execution Loop</h3>
-          <svg viewBox="0 0 300 70" class="w-full" xmlns="http://www.w3.org/2000/svg" aria-label="Heartbeat ECG animation">
-            <rect width="300" height="70" rx="8" fill="#0f172a"/>
-            <!-- Baseline -->
-            <line x1="0" y1="35" x2="300" y2="35" stroke="#1e3a5f" stroke-width="1"/>
-            <!-- ECG path (animated) -->
-            <polyline
-              class="hbeat-path"
-              points="0,35 30,35 45,35 55,10 65,55 75,35 100,35 130,35 145,35 155,10 165,55 175,35 200,35 230,35 245,35 255,10 265,55 275,35 300,35"
-              fill="none" stroke="#06B6D4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <!-- Labels -->
-            <text x="8" y="62" font-size="8" fill="#475569" font-family="monospace">wake</text>
-            <text x="88" y="62" font-size="8" fill="#475569" font-family="monospace">checkout</text>
-            <text x="168" y="62" font-size="8" fill="#475569" font-family="monospace">execute</text>
-            <text x="248" y="62" font-size="8" fill="#475569" font-family="monospace">update</text>
+        <!-- Heartbeat -->
+        <div class="arch-card reveal" data-d="2">
+          <div class="arch-card-title">Heartbeat Execution Loop</div>
+          <svg viewBox="0 0 300 68" width="100%" xmlns="http://www.w3.org/2000/svg" aria-label="Heartbeat ECG animation">
+            <rect width="300" height="68" rx="7" fill="rgba(0,0,0,0.3)"/>
+            <line x1="0" y1="34" x2="300" y2="34" stroke="rgba(42,112,80,0.2)" stroke-width="1"/>
+            <polyline class="hbeat-path"
+              points="0,34 28,34 42,34 50,10 58,56 66,34 90,34 120,34 134,34 142,10 150,56 158,34 182,34 212,34 226,34 234,10 242,56 250,34 300,34"
+              fill="none" stroke="#4FA478" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <text x="8" y="62" font-size="8" fill="#B8BCC0" font-family="JetBrains Mono, monospace">wake</text>
+            <text x="82" y="62" font-size="8" fill="#B8BCC0" font-family="JetBrains Mono, monospace">checkout</text>
+            <text x="162" y="62" font-size="8" fill="#B8BCC0" font-family="JetBrains Mono, monospace">execute</text>
+            <text x="240" y="62" font-size="8" fill="#B8BCC0" font-family="JetBrains Mono, monospace">update</text>
           </svg>
-          <p class="text-xs text-gray-500 mt-3 leading-relaxed">Each agent wakes on schedule or event trigger, checks out a task, executes, and posts a status update — all within a bounded context window.</p>
+          <p style="font-size:clamp(0.62rem,0.82vw,0.72rem); color:var(--text-sub); margin-top:var(--sp-sm); line-height:1.55;">Each agent wakes on schedule or event trigger, checks out a task, executes within a bounded context window, then posts a status update.</p>
         </div>
 
         <!-- Two-Phase Gate -->
-        <div class="bg-white dark:bg-gray-950 rounded-2xl border border-gray-200 dark:border-gray-800 p-6">
-          <h3 class="font-semibold mb-4 text-sm uppercase tracking-widest text-gray-500">Two-Phase Gate Pattern</h3>
-          <div class="flex flex-col gap-2 text-sm">
-            <!-- Phase 1 -->
-            <div class="flex items-center gap-3">
-              <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-xs shrink-0">1</div>
+        <div class="arch-card reveal" data-d="3">
+          <div class="arch-card-title">Two-Phase Gate Pattern</div>
+          <div class="gate-steps">
+            <div class="gate-step">
+              <div class="gate-num">1</div>
               <div>
-                <div class="font-medium">Review Gate</div>
-                <div class="text-xs text-gray-500">Peer agent or CTO validates correctness before merge</div>
+                <div class="gate-label">Review Gate</div>
+                <div class="gate-desc">Peer agent or CTO validates correctness before merge</div>
               </div>
             </div>
-            <div class="flex items-center justify-center">
-              <svg width="2" height="20"><line x1="1" y1="0" x2="1" y2="20" stroke="#374151" stroke-width="1.5" stroke-dasharray="3,3"/></svg>
-            </div>
-            <!-- Phase 2 -->
-            <div class="flex items-center gap-3">
-              <div class="w-8 h-8 rounded-lg bg-purple-600 flex items-center justify-center text-white font-bold text-xs shrink-0">2</div>
+            <div class="gate-connector"></div>
+            <div class="gate-step">
+              <div class="gate-num">2</div>
               <div>
-                <div class="font-medium">Approval Gate</div>
-                <div class="text-xs text-gray-500">Board or CEO approves spend / launch before execution</div>
+                <div class="gate-label">Approval Gate</div>
+                <div class="gate-desc">Board or CEO approves spend / launch before execution</div>
               </div>
             </div>
-            <div class="flex items-center justify-center">
-              <svg width="2" height="20"><line x1="1" y1="0" x2="1" y2="20" stroke="#374151" stroke-width="1.5" stroke-dasharray="3,3"/></svg>
-            </div>
-            <!-- Done -->
-            <div class="flex items-center gap-3">
-              <div class="w-8 h-8 rounded-lg bg-emerald-700 flex items-center justify-center text-white text-xs shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+            <div class="gate-connector"></div>
+            <div class="gate-step">
+              <div class="gate-num" style="background:var(--green-lit);">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
               </div>
               <div>
-                <div class="font-medium">Execution</div>
-                <div class="text-xs text-gray-500">Task proceeds only after both gates pass</div>
+                <div class="gate-label">Execution</div>
+                <div class="gate-desc">Task proceeds only after both gates pass</div>
               </div>
             </div>
           </div>
@@ -395,72 +1156,83 @@
   </div>
 </section>
 
-<!-- ─── Tech Stack ─────────────────────────────────────────────────────────── -->
-<section class="max-w-5xl mx-auto px-6 py-20">
-  <h2 class="text-3xl font-bold mb-2 text-center">Tech Stack</h2>
-  <p class="text-center text-gray-500 dark:text-gray-400 mb-12">The infrastructure the fleet runs on.</p>
-
-  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-
-    <div class="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 text-center hover:border-blue-400 transition-colors">
-      <div class="w-12 h-12 rounded-xl bg-blue-900 text-white flex items-center justify-center mx-auto mb-3 text-xl font-black">P</div>
-      <div class="font-semibold text-sm">Paperclip</div>
-      <div class="text-xs text-gray-500 mt-1">Agent orchestration, task routing, heartbeat scheduler</div>
+<!-- === TECH STACK === -->
+<section id="stack">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="eyebrow">Infrastructure</div>
+      <h2>Tech Stack</h2>
+      <p>The infrastructure the fleet runs on.</p>
     </div>
-
-    <div class="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 text-center hover:border-cyan-400 transition-colors">
-      <div class="w-12 h-12 rounded-xl bg-gray-800 text-white flex items-center justify-center mx-auto mb-3 text-xl font-black">CC</div>
-      <div class="font-semibold text-sm">Claude Code</div>
-      <div class="text-xs text-gray-500 mt-1">Agentic runtime with skills, tools, and memory system</div>
+    <div class="stack-grid">
+      <div class="stack-card reveal" data-d="1">
+        <div class="stack-icon">P</div>
+        <div class="stack-name">Paperclip</div>
+        <div class="stack-desc">Agent orchestration, task routing, heartbeat scheduler</div>
+      </div>
+      <div class="stack-card reveal" data-d="2">
+        <div class="stack-icon">CC</div>
+        <div class="stack-name">Claude Code</div>
+        <div class="stack-desc">Agentic runtime with skills, tools, and memory system</div>
+      </div>
+      <div class="stack-card reveal" data-d="3">
+        <div class="stack-icon">NL</div>
+        <div class="stack-name">NotebookLM</div>
+        <div class="stack-desc">T3 semantic knowledge base — ingested docs on demand</div>
+      </div>
+      <div class="stack-card reveal" data-d="4">
+        <div class="stack-icon">RTK</div>
+        <div class="stack-name">RTK</div>
+        <div class="stack-desc">Rust Token Killer — 60–90% token savings on dev ops</div>
+      </div>
+      <div class="stack-card reveal" data-d="5">
+        <div class="stack-icon">ld</div>
+        <div class="stack-name">launchd</div>
+        <div class="stack-desc">macOS scheduler — fires heartbeats on cron cadence</div>
+      </div>
     </div>
-
-    <div class="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 text-center hover:border-emerald-400 transition-colors">
-      <div class="w-12 h-12 rounded-xl bg-emerald-900 text-white flex items-center justify-center mx-auto mb-3 text-xl font-black">NL</div>
-      <div class="font-semibold text-sm">NotebookLM</div>
-      <div class="text-xs text-gray-500 mt-1">T3 semantic knowledge base — ingested docs on demand</div>
-    </div>
-
-    <div class="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 text-center hover:border-orange-400 transition-colors">
-      <div class="w-12 h-12 rounded-xl bg-orange-900 text-white flex items-center justify-center mx-auto mb-3 font-black text-sm">RTK</div>
-      <div class="font-semibold text-sm">RTK</div>
-      <div class="text-xs text-gray-500 mt-1">Rust Token Killer — 60–90% token savings on dev ops</div>
-    </div>
-
-    <div class="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 text-center hover:border-purple-400 transition-colors">
-      <div class="w-12 h-12 rounded-xl bg-purple-900 text-white flex items-center justify-center mx-auto mb-3 text-xl font-black">ld</div>
-      <div class="font-semibold text-sm">launchd</div>
-      <div class="text-xs text-gray-500 mt-1">macOS scheduler — fires heartbeats on cron cadence</div>
-    </div>
-
   </div>
 </section>
 
-<!-- ─── Footer ─────────────────────────────────────────────────────────────── -->
-<footer class="bg-gray-950 text-gray-500 py-10 px-6 text-center text-sm">
-  <div class="max-w-2xl mx-auto">
-    <p class="font-medium text-gray-300 mb-1">SYNAA — Synthetic Autonomous Agent Architecture</p>
-    <p class="mb-4 text-gray-300">Built by <span class="text-cyan-400 font-semibold">the fleet itself</span> as part of <a href="https://github.com/neoken555/synaa-demo" class="text-blue-400 underline hover:text-blue-300 transition-colors">SYNAA-58</a>.</p>
-    <p class="text-xs text-gray-400">&copy; 2026 SynGroup. All agents deployed.</p>
+<!-- === FOOTER === -->
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <div>
+        <div class="footer-brand">SynGroup Internal Portal — <span>SYNAA Fleet</span></div>
+        <div class="footer-sub">Built by the fleet itself · <a href="https://github.com/neoken555/synaa-demo">github.com/neoken555/synaa-demo</a></div>
+      </div>
+      <div class="footer-copy">&copy; 2026 SynGroup<br>All agents deployed.</div>
+    </div>
   </div>
 </footer>
 
-<!-- ─── Theme Script ────────────────────────────────────────────────────────── -->
 <script>
-  (function() {
-    const html = document.documentElement;
-    const stored = localStorage.getItem('theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    if (stored === 'dark' || (!stored && prefersDark)) {
-      html.classList.add('dark');
+/* === SCROLL REVEAL === */
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('revealed');
+      io.unobserve(e.target);
     }
-  })();
-
-  document.getElementById('themeToggle').addEventListener('click', function() {
-    const html = document.documentElement;
-    const isDark = html.classList.toggle('dark');
-    localStorage.setItem('theme', isDark ? 'dark' : 'light');
   });
-</script>
+}, { threshold: 0.12 });
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
 
+/* === ACTIVE NAV LINK ON SCROLL === */
+const sections = document.querySelectorAll('header, section[id]');
+const navLinks = document.querySelectorAll('.nav-links a:not(.nav-cta)');
+const sio = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const id = e.target.id || '';
+      navLinks.forEach(a => {
+        a.classList.toggle('active', a.getAttribute('href') === '#' + id);
+      });
+    }
+  });
+}, { threshold: 0.35 });
+sections.forEach(s => sio.observe(s));
+</script>
 </body>
 </html>
