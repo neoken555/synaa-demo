@@ -7,7 +7,7 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   reporter: [['list'], ['json', { outputFile: 'test-results/results.json' }]],
   use: {
-    baseURL: 'https://neoken555.github.io/synaa-demo/',
+    baseURL: 'https://kpanuwat.github.io/synaa-demo/',
     trace: 'on-first-retry',
   },
   projects: [
